@@ -5,6 +5,20 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <PackageId>UniverBlazored.SpreadsheetConverter</PackageId>
+    <Version>1.0</Version>
+    <Authors>Oscar Soto</Authors>
+    <Description>Extension of UniverBlazored that import and export Excel files with the tools provided by UniverBlazored.</Description>
+    <PackageReleaseNotes>v1.0</PackageReleaseNotes>
+    <PackageProjectUrl>https://github.com/oscardsoto/UniverBlazored.SpreadsheetConverter</PackageProjectUrl>
+
+    <EnablePackageValidation>true</EnablePackageValidation>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageTags>blazor, csharp, dotnet, univer, cdn, spreadsheets, webapp, opensource, office, apache2, jsinterop, backend, closed, closedxml</PackageTags>
+
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
 
@@ -13,12 +27,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="ClosedXML" Version="0.104.2" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.12" />
+    <None Include="icon.png" Pack="true" PackagePath="" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\UniverBlazored\UniverBlazored.csproj" />
+    <None Include="README.md" Pack="true" PackagePath="" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.104.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.12" />
+    <PackageReference Include="UniverBlazored" Version="1.0.0" />
   </ItemGroup>
 
    <!-- <ItemGroup>
