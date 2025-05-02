@@ -1,0 +1,10 @@
+This project makes use of the following third-party libraries:
+
+1. "Univer.js", which is licensed under the Apache License 2.0.
+2. "ClosedXML", which is licensed under the MIT License.
+
+This project is licensed under the Apache License 2.0.
+
+The full text of the Apache-2.0 and MIT licenses can be found in the LICENSE file.
+
+"Univer" is a trademark of its respective owners. This project is not affiliated with or endorsed by the developers of Univer.

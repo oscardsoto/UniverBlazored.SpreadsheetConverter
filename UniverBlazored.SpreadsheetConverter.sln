@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UniverBlazored.SpreadsheetConverter", "UniverBlazored.SpreadsheetConverter.csproj", "{814E5D26-857B-7E34-B03A-BB2FF2DAD773}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{814E5D26-857B-7E34-B03A-BB2FF2DAD773}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{814E5D26-857B-7E34-B03A-BB2FF2DAD773}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{814E5D26-857B-7E34-B03A-BB2FF2DAD773}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{814E5D26-857B-7E34-B03A-BB2FF2DAD773}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A4B934D7-281A-40D8-B322-42D309E6E4C1}
+	EndGlobalSection
+EndGlobal
