@@ -1045,7 +1045,7 @@ public class UniverSpreadsheetConverter : IUniverSpreadsheetConverter
             comment.SetDateTime();
             comment.SetText(com.comment.Text);
             comment.id = Toolbox.GenerateRandomId();
-            comment.personId = current.id;
+            comment.personId = current.userID;
             await agent.InsertComment(comment);
         }
     }

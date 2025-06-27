@@ -7,10 +7,10 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
     <PackageId>UniverBlazored.SpreadsheetConverter</PackageId>
-    <Version>1.0</Version>
+    <Version>1.0.1</Version>
     <Authors>Oscar Soto</Authors>
     <Description>Extension of UniverBlazored that import and export Excel files with the tools provided by UniverBlazored.</Description>
-    <PackageReleaseNotes>v1.0</PackageReleaseNotes>
+    <PackageReleaseNotes>Check all release notes at: https://github.com/oscardsoto/UniverBlazored.SpreadsheetConverter/releases</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/oscardsoto/UniverBlazored.SpreadsheetConverter</PackageProjectUrl>
 
     <EnablePackageValidation>true</EnablePackageValidation>
@@ -37,12 +37,6 @@
   <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.104.2" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.12" />
-    <PackageReference Include="UniverBlazored" Version="1.0.0" />
+    <PackageReference Include="UniverBlazored" Version="1.0.3" />
   </ItemGroup>
-
-   <!-- <ItemGroup>
-     <Reference Include="UniverBlazored">
-       <HintPath>/home/senior_drg01/vb-carpetas-comp/univer-test/UniverBlazored/bin/Debug/net8.0/UniverBlazored.dll</HintPath>
-     </Reference>
-    </ItemGroup> -->
 </Project>
