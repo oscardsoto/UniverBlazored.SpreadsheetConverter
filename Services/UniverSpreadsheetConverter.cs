@@ -906,9 +906,9 @@ public class UniverSpreadsheetConverter : IUniverSpreadsheetConverter
 
     (object[][] values, string[][] formulas) ExtractValuesAndFormulas(IXLRange range)
     {
-        int firstRow    = range.FirstRow().RowNumber(),
-            lastRow     = range.LastRow().RowNumber(),
-            firstColumn = range.FirstColumn().ColumnNumber(),
+        int firstRow    = 1,
+            lastRow     = range.RowCount(),
+            firstColumn = 1,
             lastColumn  = range.LastColumn().ColumnNumber(),
             rowPos      = firstRow,
             colPos      = firstColumn;
@@ -978,7 +978,7 @@ public class UniverSpreadsheetConverter : IUniverSpreadsheetConverter
                     var univerStyle = style.ToFontProperties(theme);
                     var univerBordr = style.ToBorderProperties(theme);
 
-                    await agent.SetActiveRange(new(x, y));
+                    await agent.SetActiveRange(new(x + rowCounter, y));
                     await agent.SetFontProperties(univerStyle);
                     foreach (var data in univerBordr)
                         await agent.SetBorderStyle(data.type, data.style, data.color);
@@ -1016,7 +1016,38 @@ public class UniverSpreadsheetConverter : IUniverSpreadsheetConverter
     {
         if (worksheet.AutoFilter.IsEnabled)
         {
-            var reference       = worksheet.AutoFilter.Range.RangeAddress.ToString(XLReferenceStyle.A1);
+            string reference = "";
+            var rangeFilter = worksheet.AutoFilter.Range;
+            if (rangeFilter.RowCount() == 1)
+            {
+                // Coordenadas del encabezado
+                int rowFirst        = rangeFilter.FirstCell().Address.RowNumber;
+                int columnFirst     = rangeFilter.FirstCell().Address.ColumnNumber;
+                int columnLast      = rangeFilter.LastCell().Address.ColumnNumber;
+
+                int rowLast = rowFirst;
+                for (int row = rowFirst + 1; row <= worksheet.LastRowUsed().RowNumber(); row++)
+                {
+                    bool rowHasData = false;
+                    for (int col = columnFirst; col <= columnLast; col++)
+                        if (!worksheet.Cell(row, col).IsEmpty())
+                        {
+                            rowHasData = true;
+                            break;
+                        }
+
+                    if (rowHasData)
+                        rowLast = row;
+                    else
+                        break; 
+                }
+
+                // Rango completo de datos filtrables
+                reference = worksheet.Range(rowFirst, columnFirst, rowLast, columnLast).RangeAddress.ToString(XLReferenceStyle.A1);
+            }
+            else
+                reference = rangeFilter.RangeAddress.ToString(XLReferenceStyle.A1);
+
             URange filterRange  = new(reference);
             await agent.SetActiveRange(filterRange);
             await agent.CreateFilter();
