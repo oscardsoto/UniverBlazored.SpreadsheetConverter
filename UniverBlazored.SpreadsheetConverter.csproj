@@ -7,7 +7,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
     <PackageId>UniverBlazored.SpreadsheetConverter</PackageId>
-    <Version>1.0.2</Version>
+    <Version>1.1.0</Version>
     <Authors>Oscar Soto</Authors>
     <Description>Extension of UniverBlazored that import and export Excel files with the tools provided by UniverBlazored.</Description>
     <PackageReleaseNotes>Check all release notes at: https://github.com/oscardsoto/UniverBlazored.SpreadsheetConverter/releases</PackageReleaseNotes>
