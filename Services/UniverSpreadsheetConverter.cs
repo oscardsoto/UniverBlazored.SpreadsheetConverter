@@ -175,18 +175,20 @@ public class UniverSpreadsheetConverter : IUniverSpreadsheetConverter
 
                         case JsonValueKind.String:
                             var val = posVal.GetString();
-                            if (DateTime.TryParse(val, out _))
+                            if (DateTime.TryParse(val, CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
                             {
-                                cell.SetValue(DateTime.Parse(val));
-                                break;
+                                if (date.Year >= 1000 && date.Year <= 9999)
+                                {
+                                    cell.SetValue(date);
+                                    break;
+                                }
                             }
 
-                            if (TimeSpan.TryParse(val, out _))
+                            if (TimeSpan.TryParse(val, CultureInfo.InvariantCulture, out var tiempo))
                             {
-                                cell.SetValue(TimeSpan.Parse(val));
+                                cell.SetValue(tiempo);
                                 break;
                             }
-
                             cell.SetValue(val);
                             break;
 
@@ -226,10 +228,11 @@ public class UniverSpreadsheetConverter : IUniverSpreadsheetConverter
     async Task SetFreeze(UniverSpreadsheetAgent agent, IXLWorksheet worksheet)
     {
         var freeze = await agent.GetFreeze();
-        if (freeze.startColumn == -1 && freeze.startRow == -1)
-            return;
-        worksheet.SheetView.FreezeRows(freeze.startRow + freeze.xSplit);
-        worksheet.SheetView.FreezeColumns(freeze.startColumn + freeze.ySplit);
+        if (freeze.startRow != -1)
+            worksheet.SheetView.FreezeRows(freeze.startRow);
+
+        if (freeze.startColumn != -1)
+            worksheet.SheetView.FreezeColumns(freeze.startColumn);
     }
 
     async Task SetStyles(UniverSpreadsheetAgent agent, IXLWorksheet worksheet, URange maxUsed)
@@ -241,34 +244,27 @@ public class UniverSpreadsheetConverter : IUniverSpreadsheetConverter
             rowsPerProcess  = Toolbox.MaxRowsPerProcess(config.MaxCellsReaded, maxRow + 1, maxCol + 1);
 
         // Gets all results from styles for each chunk
-        var listResults = new List<(URange chunk, UStyleData[][] styles)>();
+        var listResults = new List<Dictionary<UStyleData, URange[]>>();
         do
         {
             URange chunk = new(rowCounter, rowCounter + rowsPerProcess, 0, maxCol);
             await agent.SetActiveRange(chunk);
-            listResults.Add(new (chunk, await agent.GetStyles()));
+            var styles = await agent.GetStyles();
+            listResults.Add(styles);
             rowCounter += rowsPerProcess;
         }
         while (rowCounter < maxRow);
 
-        // Check and sets every value in the chunk. If there's a formula in the position, the value is ignored. Otherwise insert the value
         foreach (var result in listResults)
         {
-            var styles = result.styles;
-
-            // Check wich position of each array has styles. 
-            int x = 0,
-                y = 0;
-            do
+            foreach (var styleData in result)
             {
-                UStyleData posData = styles[x][y];
-
-                // If the style is null or default, it will be ignored - UStyleData.IsDefault(posData) is ignored for testing
-                if (posData != null)
+                var posData = styleData.Key;
+                foreach (var range in styleData.Value)
                 {
-                    var cellStyle = worksheet.Cell(result.chunk.startRow + 1 + x, result.chunk.startColumn + 1 + y).Style;
-                    
-                    var border = cellStyle.Border;
+                    var rangeStyle = worksheet.Range(range.ToA1Notation()).Style;
+
+                    var border = rangeStyle.Border;
                     #region Borders
                     if (posData.bd.HasValue)
                     {
@@ -320,7 +316,7 @@ public class UniverSpreadsheetConverter : IUniverSpreadsheetConverter
                     // Other borders are not supported!!
                     #endregion
 
-                    var font = cellStyle.Font;
+                    var font = rangeStyle.Font;
                     #region Font
                     font.SetBold(posData.bl != 0);
                     font.SetFontSize(posData.fs);
@@ -333,34 +329,34 @@ public class UniverSpreadsheetConverter : IUniverSpreadsheetConverter
                     if (posData.ul.s != 0)                      // Univer doesnt support different types of underline
                         font.SetUnderline();
                     
-                    cellStyle.Alignment.SetVertical(posData.vt.ToVerticalValue());
-                    cellStyle.Alignment.SetHorizontal(posData.ht.ToHorizontalValue());
+                    rangeStyle.Alignment.SetVertical(posData.vt.ToVerticalValue());
+                    rangeStyle.Alignment.SetHorizontal(posData.ht.ToHorizontalValue());
                     if (posData.bg.HasValue && !string.IsNullOrEmpty(posData.bg.Value.rgb))
-                        cellStyle.Fill.SetBackgroundColor(Toolbox.ConvertHexToARGB(posData.bg.Value.rgb));
+                        rangeStyle.Fill.SetBackgroundColor(Toolbox.ConvertHexToARGB(posData.bg.Value.rgb));
 
-                    cellStyle.Alignment.SetWrapText(!posData.tb.Equals(EWrapStrategy.UNSPECIFIED)); // Doesnt support wrap strategies!!
+                    rangeStyle.Alignment.SetWrapText(!posData.tb.Equals(EWrapStrategy.UNSPECIFIED)); // Doesnt support wrap strategies!!
                     switch (posData.td)
                     {
                         case ETextDirection.LEFT_TO_RIGHT:
-                            cellStyle.Alignment.ReadingOrder = XLAlignmentReadingOrderValues.LeftToRight;
+                            rangeStyle.Alignment.ReadingOrder = XLAlignmentReadingOrderValues.LeftToRight;
                             break;
 
                         case ETextDirection.RIGHT_TO_LEFT:
-                            cellStyle.Alignment.ReadingOrder = XLAlignmentReadingOrderValues.RightToLeft;
+                            rangeStyle.Alignment.ReadingOrder = XLAlignmentReadingOrderValues.RightToLeft;
                             break;
 
                         case ETextDirection.UNSPECIFIED:
-                            cellStyle.Alignment.ReadingOrder = XLAlignmentReadingOrderValues.ContextDependent;
+                            rangeStyle.Alignment.ReadingOrder = XLAlignmentReadingOrderValues.ContextDependent;
                             break;
                     }
                     if (posData.tr.HasValue)
-                        cellStyle.Alignment.SetTextRotation(posData.tr.Value.a);
+                        rangeStyle.Alignment.SetTextRotation(posData.tr.Value.a);
 
                     if (posData.n.HasValue)
                         if (posData.n.Value.IsForNumber())
-                            cellStyle.NumberFormat.SetFormat(posData.n.Value.pattern);
+                            rangeStyle.NumberFormat.SetFormat(posData.n.Value.pattern);
                         else if (posData.n.Value.IsForDate())
-                            cellStyle.DateFormat.SetFormat(posData.n.Value.pattern);
+                            rangeStyle.DateFormat.SetFormat(posData.n.Value.pattern);
                     
                     /*
                         Ignored:
@@ -371,17 +367,7 @@ public class UniverSpreadsheetConverter : IUniverSpreadsheetConverter
                     */
                     #endregion
                 }
-                
-                if (y + 1 < styles[x].Length)
-                {
-                    y++;
-                    continue;
-                }
-
-                y = 0;
-                x++;
             }
-            while (x < styles.Length);
         }
 
     }
@@ -959,7 +945,8 @@ public class UniverSpreadsheetConverter : IUniverSpreadsheetConverter
             rowCounter      = 0,
             rowsPerProcess  = Toolbox.MaxRowsPerProcess(config.MaxCellsReaded, maxRow + 1, maxCol + 1);
 
-        IXLTheme theme = worksheet.Workbook.Theme;
+        IXLTheme theme          = worksheet.Workbook.Theme;
+        IXLStyle defaultStyle   = worksheet.Style;        
         do
         {
             int firstRow    = rowCounter + 1,
@@ -967,37 +954,88 @@ public class UniverSpreadsheetConverter : IUniverSpreadsheetConverter
             var range       = worksheet.Range(firstRow, 1, lastRow, maxCol + 1);
 
             IXLStyle[][] styles = range.Rows().Select(row => row.Cells().Select(c => c.Style).ToArray()).ToArray();
-            
-            int x = 0,
-                y = 0;
-            do
+            var styleGroup      = new Dictionary<IXLStyle, List<URange>>();
+            for (int row = 0; row < styles.Length; row++)
             {
-                var style = styles[x][y];
-                if (!style.IsDefaultStyle(theme))
+                var rowStyles = styles[row];
+                for (int col = 0; col < rowStyles.Length; col++)
                 {
-                    var univerStyle = style.ToFontProperties(theme);
-                    var univerBordr = style.ToBorderProperties(theme);
+                    if (rowStyles[col].IsDefaultStyle(defaultStyle))
+                        continue;
 
-                    await agent.SetActiveRange(new(x + rowCounter, y));
+                    var cell = new URange(firstRow + row - 1, col);
+                    styleGroup.TryAdd(rowStyles[col], new());
+                    styleGroup[rowStyles[col]].Add(cell);
+                }
+            }
+
+            foreach (var group in styleGroup)
+            {
+                var style = group.Key;
+                var univerStyle = style.ToFontProperties(theme, defaultStyle);
+                var univerBordr = style.ToBorderProperties(theme, defaultStyle);
+
+                var ranges = RectangularizeRegion(group.Value);
+                foreach (var rect in ranges)
+                {
+                    await agent.SetActiveRange(rect);
                     await agent.SetFontProperties(univerStyle);
                     foreach (var data in univerBordr)
                         await agent.SetBorderStyle(data.type, data.style, data.color);
                 }
-
-                if (y + 1 < styles[x].Length)
-                {
-                    y++;
-                    continue;
-                }
-
-                y = 0;
-                x++;
             }
-            while(x < styles.Length);
 
             rowCounter += rowsPerProcess;
         }
         while (rowCounter < maxRow);
+    }
+    
+    List<URange> RectangularizeRegion(List<URange> regions)
+    {
+        var result = new List<URange>();
+        var visited = new HashSet<URange>();
+        var grid = new HashSet<URange>(regions);
+
+        foreach (var region in regions)
+        {
+            if (visited.Contains(region))
+                continue;
+
+            int endCol = region.startColumn;
+            // Expand to the right
+            while (grid.Contains(new(region.startRow, endCol + 1)) && !visited.Contains(new(region.startRow, endCol + 1)))
+                endCol++;
+
+            int endRow = region.startRow;
+            bool fullRowMatch;
+
+            // Expand downward while full row match
+            do
+            {
+                endRow++;
+                fullRowMatch = true;
+                for (int col = region.startColumn; col <= endCol; col++)
+                {
+                    if (!grid.Contains(new(endRow, col)) || visited.Contains(new(endRow, col)))
+                    {
+                        fullRowMatch = false;
+                        break;
+                    }
+                }
+            } while (fullRowMatch);
+
+            // Final endRow is the last matching one
+            endRow--;
+
+            // Mark all block as visited
+            for (int row = region.startRow; row <= endRow; row++)
+                for (int col = region.startColumn; col <= endCol; col++)
+                    visited.Add(new(row, col));
+
+            result.Add(new(region.startRow, endRow, region.startColumn, endCol));
+        }
+
+        return result;
     }
 
     async Task GetMerges(IXLWorksheet worksheet, UniverSpreadsheetAgent agent)
@@ -1005,8 +1043,8 @@ public class UniverSpreadsheetConverter : IUniverSpreadsheetConverter
         var merges = worksheet.MergedRanges;
         foreach (var merge in merges)
         {
-            string reference    = merge.RangeAddress.ToString(XLReferenceStyle.A1);
-            URange mergeRange   = new(reference);
+            string reference = merge.RangeAddress.ToString(XLReferenceStyle.A1);
+            URange mergeRange = new(reference);
             await agent.SetActiveRange(mergeRange);
             await agent.Merge(MergeStrategy.ALL, true);
         }

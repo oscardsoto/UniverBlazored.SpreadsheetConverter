@@ -14,6 +14,10 @@ internal static class Toolbox
     /// <param name="hexColor"></param>
     public static XLColor ConvertHexToARGB(string hexColor)
     {
+        // Sometimes... Univer decide to set a color to "null", which means the default color. This should fix it
+        if (hexColor.Equals("null"))
+            return XLColor.FromArgb(255, 0, 0, 0);
+
         // Sometimes, Univer decide to, instead of using hexadecimal, use "rgb(R, G, B)" pattern. This fragment solve that issue
         if (hexColor.StartsWith("rgb"))
         {

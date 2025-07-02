@@ -416,163 +416,155 @@ internal static class UniverStyleConverter
     /// Return true if the style is in default values
     /// </summary>
     /// <param name="style"></param>
-    /// <param name="theme">Spreadhseet Theme to extract the colors</param>
+    /// <param name="worksheetStyle">Default style used in the worksheet</param>
     /// <returns></returns>
-    public static bool IsDefaultStyle(this IXLStyle style, IXLTheme theme)
+    public static bool IsDefaultStyle(this IXLStyle style, IXLStyle worksheetStyle)
     {
+        
         return
-            IsDefaultFontName(style) &&
-            IsDefaultItalic(style) &&
-            IsDefaultBold(style) &&
-            IsDefaultFontSize(style) &&
-            IsDefaultUnderline(style) &&
-            IsDefaultDateFormat(style) &&
-            IsDefaultNumberFormat(style) &&
-            IsDefaultTextRotation(style) &&
-            IsDefaultReadingOrder(style) &&
-            IsDefaultBackgroundColor(style, theme) &&
-            IsDefaultFontColor(style, theme) &&
-            IsDefaultWrapText(style) &&
-            IsDefaultHorizontalAlignment(style) &&
-            IsDefaultVerticalAlignment(style) &&
-            IsDefaultFontStrikethrough(style) &&
+            IsDefaultFontName(style, worksheetStyle) &&
+            IsDefaultItalic(style, worksheetStyle) &&
+            IsDefaultBold(style, worksheetStyle) &&
+            IsDefaultFontSize(style, worksheetStyle) &&
+            IsDefaultUnderline(style, worksheetStyle) &&
+            IsDefaultDateFormat(style, worksheetStyle) &&
+            IsDefaultNumberFormat(style, worksheetStyle) &&
+            IsDefaultTextRotation(style, worksheetStyle) &&
+            IsDefaultReadingOrder(style, worksheetStyle) &&
+            IsDefaultBackgroundColor(style, worksheetStyle) &&
+            IsDefaultFontColor(style, worksheetStyle) &&
+            IsDefaultWrapText(style, worksheetStyle) &&
+            IsDefaultHorizontalAlignment(style, worksheetStyle) &&
+            IsDefaultVerticalAlignment(style, worksheetStyle) &&
+            IsDefaultFontStrikethrough(style, worksheetStyle) &&
 
-            IsDefaultBottomBorder(style) &&
-            IsDefaultLeftBorder(style) &&
-            IsDefaultTopBorder(style) &&
-            IsDefaultRightBorder(style) &&
-            IsDefaultDiagonalBorder(style) &&
-            IsDefaultDiagonalUpBorder(style) &&
-            IsDefaultDiagonalDownBorder(style);
+            IsDefaultBottomBorder(style, worksheetStyle) &&
+            IsDefaultLeftBorder(style, worksheetStyle) &&
+            IsDefaultTopBorder(style, worksheetStyle) &&
+            IsDefaultRightBorder(style, worksheetStyle) &&
+            IsDefaultDiagonalBorder(style, worksheetStyle) &&
+            IsDefaultDiagonalUpBorder(style, worksheetStyle) &&
+            IsDefaultDiagonalDownBorder(style, worksheetStyle);
     }
 
     #region All Default Conditions
 
-    static bool IsDefaultFontName(this IXLStyle style)
-        => DefaultStyleValues.FontName(style.Font.FontName);
+    static bool IsDefaultFontName(this IXLStyle style, IXLStyle worksheetStyle)
+        => worksheetStyle.Font.FontName.Equals(style.Font.FontName);
     
-    static bool IsDefaultItalic(this IXLStyle style)
-        => style.Font.Italic == DefaultStyleValues.Italic;
+    static bool IsDefaultItalic(this IXLStyle style, IXLStyle worksheetStyle)
+        => style.Font.Italic == worksheetStyle.Font.Italic;
 
-    static bool IsDefaultBold(this IXLStyle style)
-        => style.Font.Bold == DefaultStyleValues.Bold;
+    static bool IsDefaultBold(this IXLStyle style, IXLStyle worksheetStyle)
+        => style.Font.Bold == worksheetStyle.Font.Bold;
     
-    static bool IsDefaultFontSize(this IXLStyle style)
-        => DefaultStyleValues.FontSize(style.Font.FontSize);
+    static bool IsDefaultFontSize(this IXLStyle style, IXLStyle worksheetStyle)
+        => worksheetStyle.Font.FontSize == style.Font.FontSize;
 
-    static bool IsDefaultUnderline(this IXLStyle style) 
-    => style.Font.Underline == DefaultStyleValues.Underline;
+    static bool IsDefaultUnderline(this IXLStyle style, IXLStyle worksheetStyle) 
+        => style.Font.Underline == worksheetStyle.Font.Underline;
 
-    static bool IsDefaultFontStrikethrough(this IXLStyle style)
-        => style.Font.Strikethrough == DefaultStyleValues.FontStrikethrough;
+    static bool IsDefaultFontStrikethrough(this IXLStyle style, IXLStyle worksheetStyle)
+        => style.Font.Strikethrough == worksheetStyle.Font.Strikethrough;
 
-    static bool IsDefaultFontColor(this IXLStyle style, IXLTheme theme)
-    {
-        if (style.Font.FontColor.ColorType is XLColorType.Theme)
-            return theme.ResolveThemeColor(style.Font.FontColor.ThemeColor).Color.ToArgb().ToString("X8") == DefaultStyleValues.FontColor;
+    static bool IsDefaultFontColor(this IXLStyle style, IXLStyle worksheetStyle)
+        => worksheetStyle.Font.FontColor.Equals(style.Font.FontColor);
 
-        return style.Font.FontColor.Color.ToArgb().ToString("X8") == DefaultStyleValues.FontColor;
-    }
+    static bool IsDefaultWrapText(this IXLStyle style, IXLStyle worksheetStyle) 
+        => style.Alignment.WrapText == worksheetStyle.Alignment.WrapText;
 
-    static bool IsDefaultWrapText(this IXLStyle style) 
-        => style.Alignment.WrapText == DefaultStyleValues.WrapText;
+    static bool IsDefaultHorizontalAlignment(this IXLStyle style, IXLStyle worksheetStyle) 
+        => style.Alignment.Horizontal == worksheetStyle.Alignment.Horizontal;
 
-    static bool IsDefaultHorizontalAlignment(this IXLStyle style) 
-        => style.Alignment.Horizontal == DefaultStyleValues.Horizontal;
+    static bool IsDefaultVerticalAlignment(this IXLStyle style, IXLStyle worksheetStyle) 
+        => style.Alignment.Vertical == worksheetStyle.Alignment.Vertical;
 
-    static bool IsDefaultVerticalAlignment(this IXLStyle style) 
-        => style.Alignment.Vertical == DefaultStyleValues.Vertical;
+    static bool IsDefaultNumberFormat(this IXLStyle style, IXLStyle worksheetStyle) 
+        => style.NumberFormat.Format == worksheetStyle.NumberFormat.Format;
 
-    static bool IsDefaultNumberFormat(this IXLStyle style) 
-        => style.NumberFormat.Format == DefaultStyleValues.NumberFormat;
+    static bool IsDefaultDateFormat(this IXLStyle style, IXLStyle worksheetStyle) 
+        => style.DateFormat.Format == worksheetStyle.DateFormat.Format;
 
-    static bool IsDefaultDateFormat(this IXLStyle style) 
-        => style.DateFormat.Format == DefaultStyleValues.DateFormat;
+    static bool IsDefaultTextRotation(this IXLStyle style, IXLStyle worksheetStyle) 
+        => style.Alignment.TextRotation == worksheetStyle.Alignment.TextRotation;
 
-    static bool IsDefaultTextRotation(this IXLStyle style) 
-        => style.Alignment.TextRotation == DefaultStyleValues.TextRotation;
+    static bool IsDefaultReadingOrder(this IXLStyle style, IXLStyle worksheetStyle) 
+        => style.Alignment.ReadingOrder == worksheetStyle.Alignment.ReadingOrder;
 
-    static bool IsDefaultReadingOrder(this IXLStyle style) 
-        => style.Alignment.ReadingOrder == DefaultStyleValues.ReadingOrder;
-
-    static bool IsDefaultBackgroundColor(this IXLStyle style, IXLTheme theme)
-    {
-        if (style.Fill.BackgroundColor.ColorType is XLColorType.Theme)
-            return theme.ResolveThemeColor(style.Fill.BackgroundColor.ThemeColor).Color.ToArgb().ToString("X8") == DefaultStyleValues.BackgroundColor;
-
-        return style.Fill.BackgroundColor.Color.ToArgb().ToString("X8") == DefaultStyleValues.BackgroundColor;
-    }
+    static bool IsDefaultBackgroundColor(this IXLStyle style, IXLStyle worksheetStyle)
+        => worksheetStyle.Fill.BackgroundColor.Equals(style.Fill.BackgroundColor);
 
     // Borders
-    static bool IsDefaultBottomBorder(this IXLStyle style) 
-        => style.Border.BottomBorder == DefaultStyleValues.BottomBorder;
+    static bool IsDefaultBottomBorder(this IXLStyle style, IXLStyle worksheetStyle)
+        => style.Border.BottomBorder == worksheetStyle.Border.BottomBorder;
 
-    static bool IsDefaultLeftBorder(this IXLStyle style) 
-        => style.Border.LeftBorder == DefaultStyleValues.LeftBorder;
+    static bool IsDefaultLeftBorder(this IXLStyle style, IXLStyle worksheetStyle) 
+        => style.Border.LeftBorder == worksheetStyle.Border.LeftBorder;
 
-    static bool IsDefaultTopBorder(this IXLStyle style) 
-        => style.Border.TopBorder == DefaultStyleValues.TopBorder;
+    static bool IsDefaultTopBorder(this IXLStyle style, IXLStyle worksheetStyle) 
+        => style.Border.TopBorder == worksheetStyle.Border.TopBorder;
 
-    static bool IsDefaultRightBorder(this IXLStyle style) 
-        => style.Border.RightBorder == DefaultStyleValues.RightBorder;
+    static bool IsDefaultRightBorder(this IXLStyle style, IXLStyle worksheetStyle) 
+        => style.Border.RightBorder == worksheetStyle.Border.RightBorder;
 
-    static bool IsDefaultDiagonalBorder(this IXLStyle style) 
-        => style.Border.DiagonalBorder == DefaultStyleValues.DiagonalBorder;
+    static bool IsDefaultDiagonalBorder(this IXLStyle style, IXLStyle worksheetStyle) 
+        => style.Border.DiagonalBorder == worksheetStyle.Border.DiagonalBorder;
 
-    static bool IsDefaultDiagonalUpBorder(this IXLStyle style) 
-        => style.Border.DiagonalUp == DefaultStyleValues.DiagonalUp;
+    static bool IsDefaultDiagonalUpBorder(this IXLStyle style, IXLStyle worksheetStyle) 
+        => style.Border.DiagonalUp == worksheetStyle.Border.DiagonalUp;
 
-    static bool IsDefaultDiagonalDownBorder(this IXLStyle style) 
-        => style.Border.DiagonalDown == DefaultStyleValues.DiagonalDown;
+    static bool IsDefaultDiagonalDownBorder(this IXLStyle style, IXLStyle worksheetStyle) 
+        => style.Border.DiagonalDown == worksheetStyle.Border.DiagonalDown;
 
     #endregion
 
     /// <summary>
-    /// Return teh CLosedXML style as an Univer's cell style
+    /// Return the CLosedXML style as an Univer's cell style
     /// </summary>
     /// <param name="style"></param>
     /// <param name="theme">Spreadhseet Theme to extract the colors</param>
+    /// <param name="worksheetStyle">Default style used in the worksheet</param>
     /// <returns></returns>
-    public static UFontProperties ToFontProperties(this IXLStyle style, IXLTheme theme)
+    public static UFontProperties ToFontProperties(this IXLStyle style, IXLTheme theme, IXLStyle worksheetStyle)
     {
         var fontProps = new UFontProperties();
-        if (!style.IsDefaultFontName())
+        if (!style.IsDefaultFontName(worksheetStyle))
             fontProps.Family = style.Font.FontName;
 
-        if (!style.IsDefaultItalic())
+        if (!style.IsDefaultItalic(worksheetStyle))
             fontProps.Italic = style.Font.Italic;
 
-        if (!style.IsDefaultBold())
+        if (!style.IsDefaultBold(worksheetStyle))
             fontProps.Bold = style.Font.Bold;
 
-        if (!style.IsDefaultFontSize())
+        if (!style.IsDefaultFontSize(worksheetStyle))
             fontProps.Size = style.Font.FontSize;
 
-        if (!style.IsDefaultUnderline())
+        if (!style.IsDefaultUnderline(worksheetStyle))
             fontProps.Underline = style.Font.Underline is not XLFontUnderlineValues.None;
 
-        if (!style.IsDefaultDateFormat())
+        if (!style.IsDefaultDateFormat(worksheetStyle))
             fontProps.NumberFormat = style.DateFormat.Format;
-        else if (!style.IsDefaultNumberFormat())
+        else if (!style.IsDefaultNumberFormat(worksheetStyle))
             fontProps.NumberFormat = style.NumberFormat.Format;
         
-        if (!style.IsDefaultTextRotation())
+        if (!style.IsDefaultTextRotation(worksheetStyle))
             fontProps.TextRotation = style.Alignment.TextRotation;
 
-        if (!style.IsDefaultFontColor(theme))
+        if (!style.IsDefaultFontColor(worksheetStyle))
             fontProps.Color = style.Font.FontColor.ColorType is XLColorType.Theme ?
                                 Toolbox.ColorToHexString(theme.ResolveThemeColor(style.Font.FontColor.ThemeColor).Color):
                                 Toolbox.ColorToHexString(style.Font.FontColor.Color);
             
 
-        if (!style.IsDefaultWrapText())
+        if (!style.IsDefaultWrapText(worksheetStyle))
         {
             fontProps.IsWrap        = true;
             fontProps.WrapStrategy  = EWrapStrategy.WRAP;
         }
             
 
-        if (!style.IsDefaultHorizontalAlignment())
+        if (!style.IsDefaultHorizontalAlignment(worksheetStyle))
         {
             switch (style.Alignment.Horizontal)
             {
@@ -591,7 +583,7 @@ internal static class UniverStyleConverter
             }
         }
 
-        if (!style.IsDefaultVerticalAlignment())
+        if (!style.IsDefaultVerticalAlignment(worksheetStyle))
         {
             switch (style.Alignment.Vertical)
             {
@@ -610,12 +602,12 @@ internal static class UniverStyleConverter
             }
         }
 
-        if (!style.IsDefaultBackgroundColor(theme))
+        if (!style.IsDefaultBackgroundColor(worksheetStyle))
             fontProps.BackgroundColor = style.Fill.BackgroundColor.ColorType is XLColorType.Theme ?
                                             Toolbox.ColorToHexString(theme.ResolveThemeColor(style.Fill.BackgroundColor.ThemeColor).Color):
                                             Toolbox.ColorToHexString(style.Fill.BackgroundColor.Color);
 
-        if (!style.IsDefaultFontStrikethrough())
+        if (!style.IsDefaultFontStrikethrough(worksheetStyle))
             fontProps.Strikethrough = style.Font.Strikethrough;
 
         // Text Direction is ignored!
@@ -627,12 +619,13 @@ internal static class UniverStyleConverter
     /// </summary>
     /// <param name="style"></param>
     /// <param name="theme">Spreadhseet Theme to extract the colors</param>
+    /// <param name="worksheetStyle">Default style used in the worksheet</param>
     /// <returns></returns>
-    public static List<(EBorderType type, EBorderStyleType style, string color)> ToBorderProperties(this IXLStyle style, IXLTheme theme)
+    public static List<(EBorderType type, EBorderStyleType style, string color)> ToBorderProperties(this IXLStyle style, IXLTheme theme, IXLStyle worksheetStyle)
     {
         var results = new List<(EBorderType type, EBorderStyleType style, string? color)>();
         
-        if (!style.IsDefaultBottomBorder())
+        if (!style.IsDefaultBottomBorder(worksheetStyle))
             results.Add(new (
                 EBorderType.BOTTOM, 
                 style.Border.BottomBorder.ToBorderStyle(), 
@@ -641,7 +634,7 @@ internal static class UniverStyleConverter
                                                             Toolbox.ColorToHexString(style.Border.BottomBorderColor.Color, true)
             ));
         
-        if (!style.IsDefaultTopBorder())
+        if (!style.IsDefaultTopBorder(worksheetStyle))
             results.Add(new (
                 EBorderType.TOP, 
                 style.Border.TopBorder.ToBorderStyle(), 
@@ -650,7 +643,7 @@ internal static class UniverStyleConverter
                                                          Toolbox.ColorToHexString(style.Border.TopBorderColor.Color, true)
             ));
 
-        if (!style.IsDefaultLeftBorder())
+        if (!style.IsDefaultLeftBorder(worksheetStyle))
             results.Add(new(
                 EBorderType.LEFT,
                 style.Border.LeftBorder.ToBorderStyle(),
@@ -659,7 +652,7 @@ internal static class UniverStyleConverter
                                                             Toolbox.ColorToHexString(style.Border.LeftBorderColor.Color, true)
             ));
 
-        if (!style.IsDefaultRightBorder())
+        if (!style.IsDefaultRightBorder(worksheetStyle))
             results.Add(new(
                 EBorderType.RIGHT,
                 style.Border.RightBorder.ToBorderStyle(),
@@ -668,7 +661,7 @@ internal static class UniverStyleConverter
                                                             Toolbox.ColorToHexString(style.Border.RightBorderColor.Color, true) 
             ));
 
-        if (!style.IsDefaultDiagonalBorder())
+        if (!style.IsDefaultDiagonalBorder(worksheetStyle))
             results.Add(new(
                 style.Border.DiagonalUp ? EBorderType.BLTR : EBorderType.TLBR,
                 style.Border.DiagonalBorder.ToBorderStyle(),
