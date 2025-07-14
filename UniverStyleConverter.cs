@@ -545,7 +545,8 @@ internal static class UniverStyleConverter
 
         if (!style.IsDefaultDateFormat(worksheetStyle))
             fontProps.NumberFormat = style.DateFormat.Format;
-        else if (!style.IsDefaultNumberFormat(worksheetStyle))
+            
+        if (!style.IsDefaultNumberFormat(worksheetStyle))
             fontProps.NumberFormat = style.NumberFormat.Format;
         
         if (!style.IsDefaultTextRotation(worksheetStyle))
@@ -604,8 +605,8 @@ internal static class UniverStyleConverter
 
         if (!style.IsDefaultBackgroundColor(worksheetStyle))
             fontProps.BackgroundColor = style.Fill.BackgroundColor.ColorType is XLColorType.Theme ?
-                                            Toolbox.ColorToHexString(theme.ResolveThemeColor(style.Fill.BackgroundColor.ThemeColor).Color):
-                                            Toolbox.ColorToHexString(style.Fill.BackgroundColor.Color);
+                                            Toolbox.ColorToHexString(theme.ResolveThemeColor(style.Fill.BackgroundColor.ThemeColor).Color, true, style.Fill.BackgroundColor.ThemeTint):
+                                            Toolbox.ColorToHexString(style.Fill.BackgroundColor.Color, true);
 
         if (!style.IsDefaultFontStrikethrough(worksheetStyle))
             fontProps.Strikethrough = style.Font.Strikethrough;
@@ -630,7 +631,7 @@ internal static class UniverStyleConverter
                 EBorderType.BOTTOM, 
                 style.Border.BottomBorder.ToBorderStyle(), 
                 style.Border.BottomBorderColor.ColorType is XLColorType.Theme ? 
-                                                            Toolbox.ColorToHexString(theme.ResolveThemeColor(style.Border.BottomBorderColor.ThemeColor).Color, true):
+                                                            Toolbox.ColorToHexString(theme.ResolveThemeColor(style.Border.BottomBorderColor.ThemeColor).Color, true, style.Border.BottomBorderColor.ThemeTint):
                                                             Toolbox.ColorToHexString(style.Border.BottomBorderColor.Color, true)
             ));
         
@@ -639,7 +640,7 @@ internal static class UniverStyleConverter
                 EBorderType.TOP, 
                 style.Border.TopBorder.ToBorderStyle(), 
                 style.Border.TopBorderColor.ColorType is XLColorType.Theme ?
-                                                         Toolbox.ColorToHexString(theme.ResolveThemeColor(style.Border.TopBorderColor.ThemeColor).Color, true) :
+                                                         Toolbox.ColorToHexString(theme.ResolveThemeColor(style.Border.TopBorderColor.ThemeColor).Color, true, style.Border.TopBorderColor.ThemeTint) :
                                                          Toolbox.ColorToHexString(style.Border.TopBorderColor.Color, true)
             ));
 
@@ -648,17 +649,17 @@ internal static class UniverStyleConverter
                 EBorderType.LEFT,
                 style.Border.LeftBorder.ToBorderStyle(),
                 style.Border.LeftBorderColor.ColorType is XLColorType.Theme ?
-                                                            Toolbox.ColorToHexString(theme.ResolveThemeColor(style.Border.LeftBorderColor.ThemeColor).Color, true):
+                                                            Toolbox.ColorToHexString(theme.ResolveThemeColor(style.Border.LeftBorderColor.ThemeColor).Color, true, style.Border.LeftBorderColor.ThemeTint):
                                                             Toolbox.ColorToHexString(style.Border.LeftBorderColor.Color, true)
             ));
-
+        
         if (!style.IsDefaultRightBorder(worksheetStyle))
             results.Add(new(
                 EBorderType.RIGHT,
                 style.Border.RightBorder.ToBorderStyle(),
                 style.Border.RightBorderColor.ColorType is XLColorType.Theme ?
-                                                            Toolbox.ColorToHexString(theme.ResolveThemeColor(style.Border.RightBorderColor.ThemeColor).Color, true) :
-                                                            Toolbox.ColorToHexString(style.Border.RightBorderColor.Color, true) 
+                                                            Toolbox.ColorToHexString(theme.ResolveThemeColor(style.Border.RightBorderColor.ThemeColor).Color, true, style.Border.RightBorderColor.ThemeTint) :
+                                                            Toolbox.ColorToHexString(style.Border.RightBorderColor.Color, true)
             ));
 
         if (!style.IsDefaultDiagonalBorder(worksheetStyle))
@@ -666,7 +667,7 @@ internal static class UniverStyleConverter
                 style.Border.DiagonalUp ? EBorderType.BLTR : EBorderType.TLBR,
                 style.Border.DiagonalBorder.ToBorderStyle(),
                 style.Border.DiagonalBorderColor.ColorType is XLColorType.Theme ?
-                                                                Toolbox.ColorToHexString(theme.ResolveThemeColor(style.Border.DiagonalBorderColor.ThemeColor).Color, true):
+                                                                Toolbox.ColorToHexString(theme.ResolveThemeColor(style.Border.DiagonalBorderColor.ThemeColor).Color, true, style.Border.DiagonalBorderColor.ThemeTint):
                                                                 Toolbox.ColorToHexString(style.Border.DiagonalBorderColor.Color, true)
             ));
         

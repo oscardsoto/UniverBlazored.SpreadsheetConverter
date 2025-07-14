@@ -143,9 +143,75 @@ internal static class Toolbox
     /// <param name="color">Color to convert</param>
     /// <param name="onlyRGB">True to only return RGB values</param>
     /// <returns></returns>
-    public static string ColorToHexString(Color color, bool onlyRGB = false)
+    public static string ColorToHexString(Color color, bool onlyRGB = false, double? tint = null)
     {
+        if (tint != null)
+        {
+            var newColor = ApplyThemeTint(color, (double)tint);
+            return "#" + newColor.R.ToString("X2") + newColor.G.ToString("X2") + newColor.B.ToString("X2") + (onlyRGB ? "" : newColor.A.ToString("X2"));
+        }
+
+        // If is teh default value assigned by excel, it must be black
+        if (color.Name.Equals("Transparent"))
+            return "#000000";
+
         return "#" + color.R.ToString("X2") + color.G.ToString("X2") + color.B.ToString("X2") + (onlyRGB ? "" : color.A.ToString("X2"));
+    }
+
+    /// <summary>
+    /// Apply the Theme Tint in the selected color
+    /// </summary>
+    /// <param name="baseColor">Base color selected</param>
+    /// <param name="tint">Tint to apply</param>
+    /// <returns></returns>
+    static Color ApplyThemeTint(Color baseColor, double tint)
+    {
+        // 1. RGB → HLS (valores entre 0..1)
+        double r = baseColor.R / 255.0;
+        double g = baseColor.G / 255.0;
+        double b = baseColor.B / 255.0;
+        double max = Math.Max(r, Math.Max(g, b));
+        double min = Math.Min(r, Math.Min(g, b));
+        double h, l = (max + min) / 2.0;
+        double s = (max == min) ? 0 : (l < 0.5 ? (max - min) / (max + min) : (max - min) / (2.0 - max - min));
+
+        if (max == min) h = 0;
+        else if (max == r) h = (g - b) / (max - min);
+        else if (max == g) h = 2.0 + (b - r) / (max - min);
+        else h = 4.0 + (r - g) / (max - min);
+        h = (h * 60 + 360) % 360;
+
+        // 2. Aplicar tint al componente L
+        double L255 = l * 255;
+        double newL255 = tint < 0
+            ? L255 * (1.0 + tint)
+            : L255 * (1.0 - tint) + (255 - 255 * (1.0 - tint));
+        double newL = newL255 / 255.0;
+
+        // 3. Reconstruir HLS con nuevo L y convertir a RGB
+        double m2 = newL <= 0.5 ? newL * (1 + s) : newL + s - newL * s;
+        double m1 = 2 * newL - m2;
+
+        Func<double, double> hueToRgb = t =>
+        {
+            if (t < 0) t += 360;
+            if (t >= 360) t -= 360;
+            if (t < 60) return m1 + (m2 - m1) * t / 60;
+            if (t < 180) return m2;
+            if (t < 240) return m1 + (m2 - m1) * (240 - t) / 60;
+            return m1;
+        };
+
+        double R = hueToRgb(h + 120);
+        double G = hueToRgb(h);
+        double B = hueToRgb(h - 120);
+
+        return Color.FromArgb(
+            baseColor.A,
+            (int)Math.Round(R * 255),
+            (int)Math.Round(G * 255),
+            (int)Math.Round(B * 255)
+        );
     }
 
     /// <summary>

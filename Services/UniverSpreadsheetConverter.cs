@@ -73,6 +73,19 @@ public class UniverSpreadsheetConverter : IUniverSpreadsheetConverter
             // Pending...
             if (options.RecAccesibility)
                 await SetAccesibility(agent, worksheet);
+
+
+            // Last thing is hidden parts
+            foreach (var rowsHidden in sheet.rowsHidden)
+                for (int r = rowsHidden.startRow + 1; r < rowsHidden.endRow + 1; r++)
+                    worksheet.Row(r).Hide();
+
+            foreach (var colsHidden in sheet.columnsHidden)
+                for (int c = colsHidden.startColumn + 1; c < colsHidden.endColumn + 1; c++)
+                    worksheet.Column(c).Hide();
+
+            if (sheet.isHidden)
+                worksheet.Hide();
         }
 
         return workbook;
@@ -118,6 +131,18 @@ public class UniverSpreadsheetConverter : IUniverSpreadsheetConverter
         // Pending...
         if (options.RecAccesibility)
             await SetAccesibility(agent, worksheet);
+
+        // Last thing is hidden parts
+        foreach (var rowsHidden in unvrSheet.rowsHidden)
+            for (int r = rowsHidden.startRow + 1; r < rowsHidden.endRow + 1; r++)
+                worksheet.Row(r).Hide();
+
+        foreach (var colsHidden in unvrSheet.columnsHidden)
+            for (int c = colsHidden.startColumn + 1; c < colsHidden.endColumn + 1; c++)
+                worksheet.Column(c).Hide();
+
+        if (unvrSheet.isHidden)
+            worksheet.Hide();
     }
 
     async Task SetData(UniverSpreadsheetAgent agent, IXLWorksheet worksheet, URange maxUsed)
@@ -815,7 +840,9 @@ public class UniverSpreadsheetConverter : IUniverSpreadsheetConverter
     public async Task GetInformationInAgentAsync(XLWorkbook workbook, UniverSpreadsheetAgent agent, UniverUserManager userManager, SpreadsheetOptions options)
     {
         foreach (var worksheet in workbook.Worksheets)
+        {
             await GetInformationInAgentAsync(worksheet, agent, userManager, options);
+        }
     }
 
     /// <summary>
@@ -832,14 +859,14 @@ public class UniverSpreadsheetConverter : IUniverSpreadsheetConverter
             return;
 
         string colorHex = worksheet.TabColor.ColorType is XLColorType.Theme ?
-                            Toolbox.ColorToHexString(worksheet.Workbook.Theme.ResolveThemeColor(worksheet.TabColor.ThemeColor).Color):
+                            Toolbox.ColorToHexString(worksheet.Workbook.Theme.ResolveThemeColor(worksheet.TabColor.ThemeColor).Color, false, worksheet.TabColor.ThemeTint) :
                             Toolbox.ColorToHexString(worksheet.TabColor.Color);
 
         var sheetAdded = await agent.AddNewSheet(
-                worksheet.Name, 
-                worksheet.LastRowUsed().RowNumber(), 
-                worksheet.LastColumnUsed().ColumnNumber(), 
-                colorHex.Equals(Toolbox.ColorToHexString(Color.FromArgb(0,0,0,0))) ? null : colorHex);
+                worksheet.Name,
+                worksheet.LastRowUsed().RowNumber(),
+                worksheet.LastColumnUsed().ColumnNumber(),
+                colorHex.Equals(Toolbox.ColorToHexString(Color.FromArgb(0, 0, 0, 0))) ? null : colorHex);
 
         if (options.RecData)
             await GetData(worksheet, agent, sheetAdded.maxUsed);
@@ -862,6 +889,19 @@ public class UniverSpreadsheetConverter : IUniverSpreadsheetConverter
         // Pending...
         if (options.RecAccesibility)
             await GetAccesibility(worksheet, agent);
+
+
+        // Last thing is hidden parts :D
+        foreach (var col in worksheet.ColumnsUsed())
+            if (col.IsHidden)
+                await agent.HideColumns(col.ColumnNumber() - 1, 1);
+
+        foreach (var row in worksheet.RowsUsed())
+            if (row.IsHidden)
+                await agent.HideRows(row.RowNumber() - 1, 1);
+
+        if (worksheet.Visibility is XLWorksheetVisibility.Hidden)
+            await agent.HideSheet();
     }
 
     async Task GetData(IXLWorksheet worksheet, UniverSpreadsheetAgent agent, URange maxUsed)
@@ -954,6 +994,7 @@ public class UniverSpreadsheetConverter : IUniverSpreadsheetConverter
             var range       = worksheet.Range(firstRow, 1, lastRow, maxCol + 1);
 
             IXLStyle[][] styles = range.Rows().Select(row => row.Cells().Select(c => c.Style).ToArray()).ToArray();
+
             var styleGroup      = new Dictionary<IXLStyle, List<URange>>();
             for (int row = 0; row < styles.Length; row++)
             {
@@ -969,6 +1010,7 @@ public class UniverSpreadsheetConverter : IUniverSpreadsheetConverter
                 }
             }
 
+            var tasks = new List<Task>();
             foreach (var group in styleGroup)
             {
                 var style = group.Key;
@@ -976,14 +1018,11 @@ public class UniverSpreadsheetConverter : IUniverSpreadsheetConverter
                 var univerBordr = style.ToBorderProperties(theme, defaultStyle);
 
                 var ranges = RectangularizeRegion(group.Value);
-                foreach (var rect in ranges)
-                {
-                    await agent.SetActiveRange(rect);
-                    await agent.SetFontProperties(univerStyle);
-                    foreach (var data in univerBordr)
-                        await agent.SetBorderStyle(data.type, data.style, data.color);
-                }
+                tasks.Add(agent.SetStylesAsync(univerStyle, ranges.ToArray()));
+                tasks.Add(agent.SetBordersAsync(univerBordr, ranges.ToArray()));
             }
+
+            tasks.ForEach(async (t) => await t);
 
             rowCounter += rowsPerProcess;
         }
@@ -1046,6 +1085,8 @@ public class UniverSpreadsheetConverter : IUniverSpreadsheetConverter
             string reference = merge.RangeAddress.ToString(XLReferenceStyle.A1);
             URange mergeRange = new(reference);
             await agent.SetActiveRange(mergeRange);
+            await agent.Merge(MergeStrategy.ALL, true);
+            await agent.BreakMerge();
             await agent.Merge(MergeStrategy.ALL, true);
         }
     }
@@ -1127,6 +1168,7 @@ public class UniverSpreadsheetConverter : IUniverSpreadsheetConverter
             string cellTop = img.TopLeftCell.Address.ToString(XLReferenceStyle.A1);
             URange cellImg = new(cellTop);
             await agent.AddImage(dataURI, cellImg.startRow, cellImg.startColumn, Toolbox.ConvertToPixels(img.Left), Toolbox.ConvertToPixels(img.Top));
+            
         }
     }
 
@@ -1190,7 +1232,7 @@ public class UniverSpreadsheetConverter : IUniverSpreadsheetConverter
                     barConfig.isShowValue   = true;
                     barConfig.isGradient    = true;
                     XLColor color           = cdFt.Colors.First().Value;
-                    barConfig.positiveColor = color.ColorType is XLColorType.Theme ? Toolbox.ColorToHexString(theme.ResolveThemeColor(color.ThemeColor).Color) : Toolbox.ColorToHexString(color.Color);
+                    barConfig.positiveColor = color.ColorType is XLColorType.Theme ? Toolbox.ColorToHexString(theme.ResolveThemeColor(color.ThemeColor).Color, false, color.ThemeTint) : Toolbox.ColorToHexString(color.Color);
                     barConfig.nativeColor   = Toolbox.ColorToHexString(Color.Red); // Default value
 
                     // Min Value
@@ -1239,7 +1281,7 @@ public class UniverSpreadsheetConverter : IUniverSpreadsheetConverter
                         var config      = new UColorScaleConfig();
                         config.index    = kvp.Key;
                         config.color    = cdFt.Colors[kvp.Key].ColorType is XLColorType.Theme ? 
-                                            Toolbox.ColorToHexString(theme.ResolveThemeColor(cdFt.Colors[kvp.Key].ThemeColor).Color):
+                                            Toolbox.ColorToHexString(theme.ResolveThemeColor(cdFt.Colors[kvp.Key].ThemeColor).Color, false, cdFt.Colors[kvp.Key].ThemeTint):
                                             Toolbox.ColorToHexString(cdFt.Colors[kvp.Key].Color);
 
                         var valType = cdFt.ContentTypes[kvp.Key].ToValueType();
@@ -1275,11 +1317,11 @@ public class UniverSpreadsheetConverter : IUniverSpreadsheetConverter
                     var condFormStyle = new UConditionFormatStyle()
                     {
                         Background      = styleFrmt.Fill.BackgroundColor.ColorType is XLColorType.Theme ?
-                                            Toolbox.ColorToHexString(theme.ResolveThemeColor(styleFrmt.Fill.BackgroundColor.ThemeColor).Color):
+                                            Toolbox.ColorToHexString(theme.ResolveThemeColor(styleFrmt.Fill.BackgroundColor.ThemeColor).Color, false, styleFrmt.Fill.BackgroundColor.ThemeTint):
                                             Toolbox.ColorToHexString(styleFrmt.Fill.BackgroundColor.Color),
                         IsBold          = styleFrmt.Font.Bold,
                         FontColor       = styleFrmt.Font.FontColor.ColorType is XLColorType.Theme ?
-                                            Toolbox.ColorToHexString(theme.ResolveThemeColor(styleFrmt.Font.FontColor.ThemeColor).Color):
+                                            Toolbox.ColorToHexString(theme.ResolveThemeColor(styleFrmt.Font.FontColor.ThemeColor).Color, false, styleFrmt.Font.FontColor.ThemeTint):
                                             Toolbox.ColorToHexString(styleFrmt.Font.FontColor.Color),
                         Italic          = styleFrmt.Font.Italic,
                         Strikethrough   = styleFrmt.Font.Strikethrough,
