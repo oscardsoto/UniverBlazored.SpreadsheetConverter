@@ -1,4 +1,4 @@
-using ClosedXML.Excel;
+
 using UniverBlazored.Generic.Services;
 using UniverBlazored.Spreadsheets.Data.Workbook;
 using UniverBlazored.Spreadsheets.Services;
@@ -9,7 +9,7 @@ namespace UniverBlazored.SpreadsheetConverter.Services;
 /// Interface for managing spreadsheet data.
 /// Provides methods to set/get data into/from an XLWorkbook using agent and userManager details, and optionally just populate data.
 /// </summary>
-public interface IUniverSpreadsheetConverter
+public interface IUniverSpreadsheetConverter<TWorkbook, TWorksheet>
 {
     /// <summary>
     /// Setup spreadsheet data based on provided agent and userManager.
@@ -17,7 +17,7 @@ public interface IUniverSpreadsheetConverter
     /// <param name="agent">Agent for setting up the workbook.</param>
     /// <param name="userManager">User service for setting up the workbook.</param>
     /// <param name="options">Flags to select wich data will be setted</param>
-    Task<XLWorkbook> SetInformationAsync(UniverSpreadsheetAgent agent, UniverUserManager userManager, SpreadsheetOptions options);
+    Task<TWorkbook> SetInformationAsync(UniverSpreadsheetAgent agent, UniverUserManager userManager, SpreadsheetOptions options);
 
     /// <summary>
     /// Get data into a workbook using provided agent and worksheet.
@@ -26,7 +26,7 @@ public interface IUniverSpreadsheetConverter
     /// <param name="agent">Agent for storing fetched data.</param>
     /// <param name="userManager">User service for setting up the workbook.</param>
     /// <param name="options">Flags to select wich data will be setted</param>
-    Task GetInformationInAgentAsync(XLWorkbook excelWorkbook, UniverSpreadsheetAgent agent, UniverUserManager userManager, SpreadsheetOptions options);
+    Task GetInformationInAgentAsync(TWorkbook excelWorkbook, UniverSpreadsheetAgent agent, UniverUserManager userManager, SpreadsheetOptions options);
 
     /// <summary>
     /// Gets information into an agent from a worksheet (IXLWorksheet). 
@@ -35,7 +35,7 @@ public interface IUniverSpreadsheetConverter
     /// <param name="agent">Agent for storing fetched data.</param>
     /// <param name="userManager">User service for setting up the workbook.</param>
     /// <param name="options">Flags to select wich data will be setted</param>
-    Task GetInformationInAgentAsync(IXLWorksheet worksheet, UniverSpreadsheetAgent agent, UniverUserManager userManager, SpreadsheetOptions options);
+    Task GetInformationInAgentAsync(TWorksheet worksheet, UniverSpreadsheetAgent agent, UniverUserManager userManager, SpreadsheetOptions options);
 
     /// <summary>
     /// Sets spreadsheet data based on provided agent and userManager.
@@ -45,5 +45,5 @@ public interface IUniverSpreadsheetConverter
     /// <param name="agent">Univer's agent</param>
     /// <param name="userManager">Univer's user manager</param>
     /// <param name="options">Flags to select wich data will be setted</param>
-    Task SetInformationInSheetAsync(XLWorkbook workbook, USheetInfo unvrSheet, UniverSpreadsheetAgent agent, UniverUserManager userManager, SpreadsheetOptions options);
+    Task SetInformationInSheetAsync(TWorkbook workbook, USheetInfo unvrSheet, UniverSpreadsheetAgent agent, UniverUserManager userManager, SpreadsheetOptions options);
 }

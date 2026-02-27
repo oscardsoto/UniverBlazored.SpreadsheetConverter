@@ -2,6 +2,7 @@ using System.Drawing;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using ClosedXML.Excel;
+using DocumentFormat.OpenXml;
 using UniverBlazored.Spreadsheets.Data.ConditionFormat;
 
 namespace UniverBlazored.SpreadsheetConverter;
@@ -58,7 +59,7 @@ internal static class Toolbox
             argb = Convert.ToInt32(hexColor, 16);
         
         else
-            throw new ArgumentException("El código hexadecimal debe ser de 6 o 8 dígitos.");
+            throw new ArgumentException("El código hexadecimal debe ser de 6 u 8 dígitos.");
 
         int red     = (argb >> 24) & 0xFF;  // Los 8 primeros bits son para Alpha
         int green   = (argb >> 16) & 0xFF;  // Los siguientes 8 bits son para Red
@@ -67,6 +68,53 @@ internal static class Toolbox
 
         // Devolver los valores en un array [Alpha, Red, Green, Blue]
         return XLColor.FromArgb(alpha, red, green, blue);
+    }
+
+    /// <summary>
+    /// Returns the values of ARGB of the Hexadecimal value in HexBinaryValue, from OpenXML
+    /// </summary>
+    /// <param name="hexColor"></param>
+    /// <returns></returns>
+    public static HexBinaryValue ConvertHexToBinary(string hexColor)
+    {
+        if (hexColor.Equals("null"))
+            return new HexBinaryValue("FF000000");
+
+        if (hexColor.StartsWith("rgb"))
+        {
+            var match_rgb = Regex.Match(hexColor, @"rgb\((\d+),(\d+),(\d+)\)");
+            if (match_rgb.Success)
+            {
+                int r = int.Parse(match_rgb.Groups[1].Value);
+                int g = int.Parse(match_rgb.Groups[2].Value);
+                int b = int.Parse(match_rgb.Groups[3].Value);
+
+                return new HexBinaryValue($"FF{r:X2}{g:X2}{b:X2}");
+            }
+
+            var match_rgba = Regex.Match(hexColor, @"rgba\((\d+),(\d+),(\d+),(\d+)\)");
+            if (match_rgba.Success)
+            {
+                int r = int.Parse(match_rgba.Groups[1].Value);
+                int g = int.Parse(match_rgba.Groups[2].Value);
+                int b = int.Parse(match_rgba.Groups[3].Value);
+                int a = int.Parse(match_rgba.Groups[4].Value);
+
+                return new HexBinaryValue($"{a:X2}{r:X2}{g:X2}{b:X2}");
+            }
+        }
+
+        if (hexColor.StartsWith("#"))
+            hexColor = hexColor.Substring(1);  // Eliminar el carácter '#'
+
+        if (hexColor.Length == 6)
+            // Si es un código de 6 dígitos, asumimos Alpha = 255
+            hexColor = "FF" + hexColor;             // Agregar Alpha al final
+        
+        else if (hexColor.Length != 8)
+            throw new ArgumentException("El código hexadecimal debe ser de 6 u 8 dígitos.");
+
+        return new HexBinaryValue(hexColor);
     }
 
     /// <summary>

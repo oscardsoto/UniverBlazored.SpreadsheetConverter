@@ -1,5 +1,8 @@
+using ClosedXML.Excel;
 using Microsoft.Extensions.DependencyInjection;
 using UniverBlazored.SpreadsheetConverter.Services;
+using UniverBlazored.SpreadsheetConverter.Services.IO;
+using UniverBlazored.SpreadsheetConverter.Services.IO.Data;
 
 namespace UniverBlazored.SpreadsheetConverter;
 
@@ -16,6 +19,8 @@ public static class UniverSpreadsheetConverterService
     public static void AddUniverSpreadsheetsConverter(this IServiceCollection services, Action<UniverSpreadsheetConverterConfig>? configuration = null)
     {
         services.Configure(configuration == null ? config => {} : configuration);
-        services.AddScoped<IUniverSpreadsheetConverter, UniverSpreadsheetConverter>();
+        services.AddScoped<ISpreadsheetReader<UWorksheetInfo>, USpreadsheetReader>();
+        services.AddScoped<ISpreadsheetWriter<IXLWorksheet>, USpreadsheetWriter>();
+        services.AddScoped<IUniverSpreadsheetConverter<XLWorkbook, IXLWorksheet>, UniverSpreadsheetConverter>();
     }    
 }
