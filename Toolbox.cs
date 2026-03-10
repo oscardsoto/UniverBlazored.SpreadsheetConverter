@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using ClosedXML.Excel;
 using DocumentFormat.OpenXml;
 using UniverBlazored.Spreadsheets.Data.ConditionFormat;
+using UniverBlazored.Spreadsheets.Data.Workbook;
 
 namespace UniverBlazored.SpreadsheetConverter;
 
@@ -401,4 +402,6 @@ internal static class Toolbox
         while (x < values.Length);
         return true;
     }
+
+    public static bool IsOutsideMaxRange(URange range, URange maxRange) => range.startRow > maxRange.endRow || range.endRow > maxRange.endRow || range.startColumn > maxRange.endColumn || range.endColumn > maxRange.endColumn;
 }

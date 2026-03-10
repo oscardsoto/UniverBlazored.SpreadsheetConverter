@@ -480,13 +480,17 @@ public class USpreadsheetWriter : ISpreadsheetWriter<IXLWorksheet>
         
         // Gets all result from both values and formulas for each chunk
         var listResults = new List<(URange chunk, object[][] values, string[][] formules)>();
-        agent.Data.OnSheet();   // Select active sheet
         do
         {
             URange chunk = new(rowCounter, rowCounter + rowsPerProcess, 0, maxCol);
-            agent.Data.OnRange(chunk);
-            var _getValues = await agent.Data.GetValues();
-            var _getFormulas = await agent.Data.GetFormulas();
+            if (Toolbox.IsOutsideMaxRange(chunk, maxUsed))
+            {
+                chunk.endRow = maxUsed.endRow;
+                chunk.endColumn = maxUsed.endColumn;
+            }
+
+            var _getValues = await agent.Data.OnSheet().OnRange(chunk).GetValues();
+            var _getFormulas = await agent.Data.OnSheet().OnRange(chunk).GetFormulas();
             listResults.Add(new (chunk, _getValues, _getFormulas));
             rowCounter += rowsPerProcess;
         }
@@ -564,14 +568,11 @@ public class USpreadsheetWriter : ISpreadsheetWriter<IXLWorksheet>
     /// <inheritdoc/>
     public async Task SetFiltersAsync(UniverSpreadsheetAgent agent, IXLWorksheet worksheet)
     {
-        agent.Ranges.OnSheet();   // Select active sheet
-        if (!await agent.Ranges.HasFilter())
+        if (!await agent.Ranges.OnSheet().HasFilter())
             return;
 
-        var filter = await agent.Ranges.GetFilter();
+        var filter = await agent.Ranges.OnSheet().GetFilter();
         worksheet.Range(filter.Value.ToA1Notation()).SetAutoFilter();
-
-        throw new NotImplementedException();
     }
 
     /// <inheritdoc/>
@@ -588,12 +589,11 @@ public class USpreadsheetWriter : ISpreadsheetWriter<IXLWorksheet>
     /// <inheritdoc/>
     public async Task SetImagesAsync(UniverSpreadsheetAgent agent, IXLWorksheet worksheet)
     {
-        agent.Images.OnSheet();   // Select active sheet
-        var imagesId = await agent.Images.GetImagesId();
+        var imagesId = await agent.Images.OnSheet().GetImagesId();
         foreach (var imgId in imagesId)
         {
-            var imageInfo = await agent.Images.GetImage(imgId, false);
-            imageInfo.source = await agent.Images.GetImageSource(imgId);
+            var imageInfo = await agent.Images.OnSheet().GetImage(imgId, false);
+            imageInfo.source = await agent.Images.OnSheet().GetImageSource(imgId);
             byte[] imageBytes = Convert.FromBase64String(imageInfo.GetBase64());
             using (MemoryStream stream = new(imageBytes))
             {
@@ -641,11 +641,16 @@ public class USpreadsheetWriter : ISpreadsheetWriter<IXLWorksheet>
 
         // Gets all results from styles for each chunk
         var listResults = new List<Dictionary<UStyleData, URange[]>>();
-        agent.Styles.OnSheet();   // Select active sheet
         do
         {
             URange chunk = new(rowCounter, rowCounter + rowsPerProcess, 0, maxCol);
-            var styles = await agent.Styles.OnRange(chunk).GetStyles();
+            if (Toolbox.IsOutsideMaxRange(chunk, maxUsed))
+            {
+                chunk.endRow = maxUsed.endRow;
+                chunk.endColumn = maxUsed.endColumn;
+            }
+            
+            var styles = await agent.Styles.OnSheet().OnRange(chunk).GetStyles();
             listResults.Add(styles);
             rowCounter += rowsPerProcess;
         }

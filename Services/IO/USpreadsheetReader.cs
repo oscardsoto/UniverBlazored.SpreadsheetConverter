@@ -106,7 +106,7 @@ public class USpreadsheetReader : ISpreadsheetReader<UWorksheetInfo>
         foreach (var merge in worksheet.MergedRanges)
         {
             // Any merge that is outside of the limits, will be ignored
-            if (IsOutsideMaxRange(merge, worksheet.SheetInfo.maxUsed))
+            if (Toolbox.IsOutsideMaxRange(merge, worksheet.SheetInfo.maxUsed))
                 continue;
             await agent.Ranges.OnSheet(worksheet.SheetInfo).OnRange(merge).Merge(MergeStrategy.ALL, true);
         }
@@ -117,13 +117,11 @@ public class USpreadsheetReader : ISpreadsheetReader<UWorksheetInfo>
     {
         foreach (var style in worksheet.RangeStyles)
         {
-            var rangesStyle = style.Ranges.Where(r => !IsOutsideMaxRange(r, worksheet.SheetInfo.maxUsed));
+            var rangesStyle = style.Ranges.Where(r => !Toolbox.IsOutsideMaxRange(r, worksheet.SheetInfo.maxUsed));
             if (rangesStyle.Count() == 0)
                 continue;
             await agent.Styles.OnSheet(worksheet.SheetInfo).SetStylesAsync(style.FontProperties, rangesStyle.ToArray());
             await agent.Styles.OnSheet(worksheet.SheetInfo).SetBordersAsync(style.Borders, rangesStyle.ToArray());
         }
     }
-
-    bool IsOutsideMaxRange(URange range, URange maxRange) => range.startRow > maxRange.endRow || range.endRow > maxRange.endRow || range.startColumn > maxRange.endColumn || range.endColumn > maxRange.endColumn;
 }
