@@ -17,7 +17,59 @@ public class USpreadsheetWriter : ISpreadsheetWriter<IXLWorksheet>
     /// <inheritdoc/>
     public async Task SetAccesibilityAsync(UniverSpreadsheetAgent agent, IXLWorksheet worksheet)
     {
-        throw new NotImplementedException();
+        var permissions = await agent.Accessibility.OnSheet().GetWorksheetPermissions();
+        if (permissions == null || permissions.Count == 0)
+            return;
+
+        bool canEdit = permissions.TryGetValue("WorksheetEdit", out var edit) && edit;
+        if (canEdit)
+            return;
+
+        XLSheetProtectionElements allowedElements = XLSheetProtectionElements.None;
+
+        if (permissions.TryGetValue("WorksheetSort", out var canSort) && canSort)
+            allowedElements |= XLSheetProtectionElements.Sort;
+
+        if (permissions.TryGetValue("WorksheetFilter", out var canFilter) && canFilter)
+            allowedElements |= XLSheetProtectionElements.AutoFilter;
+
+        if (permissions.TryGetValue("WorksheetPivotTable", out var canPivot) && canPivot)
+            allowedElements |= XLSheetProtectionElements.PivotTables;
+
+        if (permissions.TryGetValue("WorksheetInsertColumn", out var canInsertColumn) && canInsertColumn)
+            allowedElements |= XLSheetProtectionElements.InsertColumns;
+
+        if (permissions.TryGetValue("WorksheetInsertRow", out var canInsertRow) && canInsertRow)
+            allowedElements |= XLSheetProtectionElements.InsertRows;
+
+        if (permissions.TryGetValue("WorksheetInsertHyperlink", out var canInsertHyperlink) && canInsertHyperlink)
+            allowedElements |= XLSheetProtectionElements.InsertHyperlinks;
+
+        if (permissions.TryGetValue("WorksheetDeleteColumn", out var canDeleteColumn) && canDeleteColumn)
+            allowedElements |= XLSheetProtectionElements.DeleteColumns;
+
+        if (permissions.TryGetValue("WorksheetDeleteRow", out var canDeleteRow) && canDeleteRow)
+            allowedElements |= XLSheetProtectionElements.DeleteRows;
+
+        if (permissions.TryGetValue("WorksheetSetCellStyle", out var canSetCellStyle) && canSetCellStyle)
+            allowedElements |= XLSheetProtectionElements.FormatCells;
+
+        if (permissions.TryGetValue("WorksheetSetColumnStyle", out var canSetColumnStyle) && canSetColumnStyle)
+            allowedElements |= XLSheetProtectionElements.FormatColumns;
+
+        if (permissions.TryGetValue("WorksheetSetRowStyle", out var canSetRowStyle) && canSetRowStyle)
+            allowedElements |= XLSheetProtectionElements.FormatRows;
+
+        if (permissions.TryGetValue("WorksheetEditExtraObject", out var canEditObjects) && canEditObjects)
+            allowedElements |= XLSheetProtectionElements.EditObjects;
+
+        if (permissions.TryGetValue("WorksheetSelectProtectedCells", out var canSelectProtectedCells) && canSelectProtectedCells)
+            allowedElements |= XLSheetProtectionElements.SelectLockedCells;
+
+        if (permissions.TryGetValue("WorksheetSelectUnProtectedCells", out var canSelectUnprotectedCells) && canSelectUnprotectedCells)
+            allowedElements |= XLSheetProtectionElements.SelectUnlockedCells;
+
+        worksheet.Protect(allowedElements);
     }
 
     /// <inheritdoc/>

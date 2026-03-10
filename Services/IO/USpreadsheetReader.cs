@@ -2,6 +2,7 @@ using ClosedXML.Excel;
 using UniverBlazored.Generic.Data;
 using UniverBlazored.Generic.Services;
 using UniverBlazored.SpreadsheetConverter.Services.IO.Data;
+using UniverBlazored.Spreadsheets.Data.Accessibility;
 using UniverBlazored.Spreadsheets.Data.Styles;
 using UniverBlazored.Spreadsheets.Data.Workbook;
 using UniverBlazored.Spreadsheets.Services;
@@ -16,7 +17,29 @@ public class USpreadsheetReader : ISpreadsheetReader<UWorksheetInfo>
     /// <inheritdoc/>
     public async Task GetAccesibilityAsync(UWorksheetInfo worksheet, UniverSpreadsheetAgent agent)
     {
-        // Pending...
+        var worksheetProperty = worksheet.GetType().GetProperty("Worksheet");
+        var sourceWorksheet = worksheetProperty?.GetValue(worksheet) as IXLWorksheet;
+        if (sourceWorksheet == null || !sourceWorksheet.IsProtected)
+            return;
+
+        await agent.Accessibility.OnSheet(worksheet.SheetInfo).SetWorksheetPermission(EWorksheetPermissionPoint.Edit, false);
+
+        var allowedElements = sourceWorksheet.Protection.AllowedElements;
+
+        await agent.Accessibility.OnSheet(worksheet.SheetInfo).SetWorksheetPermission(EWorksheetPermissionPoint.Sort, allowedElements.HasFlag(XLSheetProtectionElements.Sort));
+        await agent.Accessibility.OnSheet(worksheet.SheetInfo).SetWorksheetPermission(EWorksheetPermissionPoint.Filter, allowedElements.HasFlag(XLSheetProtectionElements.AutoFilter));
+        await agent.Accessibility.OnSheet(worksheet.SheetInfo).SetWorksheetPermission(EWorksheetPermissionPoint.PivotTable, allowedElements.HasFlag(XLSheetProtectionElements.PivotTables));
+        await agent.Accessibility.OnSheet(worksheet.SheetInfo).SetWorksheetPermission(EWorksheetPermissionPoint.InsertColumn, allowedElements.HasFlag(XLSheetProtectionElements.InsertColumns));
+        await agent.Accessibility.OnSheet(worksheet.SheetInfo).SetWorksheetPermission(EWorksheetPermissionPoint.InsertRow, allowedElements.HasFlag(XLSheetProtectionElements.InsertRows));
+        await agent.Accessibility.OnSheet(worksheet.SheetInfo).SetWorksheetPermission(EWorksheetPermissionPoint.InsertHyperlink, allowedElements.HasFlag(XLSheetProtectionElements.InsertHyperlinks));
+        await agent.Accessibility.OnSheet(worksheet.SheetInfo).SetWorksheetPermission(EWorksheetPermissionPoint.DeleteColumn, allowedElements.HasFlag(XLSheetProtectionElements.DeleteColumns));
+        await agent.Accessibility.OnSheet(worksheet.SheetInfo).SetWorksheetPermission(EWorksheetPermissionPoint.DeleteRow, allowedElements.HasFlag(XLSheetProtectionElements.DeleteRows));
+        await agent.Accessibility.OnSheet(worksheet.SheetInfo).SetWorksheetPermission(EWorksheetPermissionPoint.SetCellStyle, allowedElements.HasFlag(XLSheetProtectionElements.FormatCells));
+        await agent.Accessibility.OnSheet(worksheet.SheetInfo).SetWorksheetPermission(EWorksheetPermissionPoint.SetColumnStyle, allowedElements.HasFlag(XLSheetProtectionElements.FormatColumns));
+        await agent.Accessibility.OnSheet(worksheet.SheetInfo).SetWorksheetPermission(EWorksheetPermissionPoint.SetRowStyle, allowedElements.HasFlag(XLSheetProtectionElements.FormatRows));
+        await agent.Accessibility.OnSheet(worksheet.SheetInfo).SetWorksheetPermission(EWorksheetPermissionPoint.EditExtraObject, allowedElements.HasFlag(XLSheetProtectionElements.EditObjects));
+        await agent.Accessibility.OnSheet(worksheet.SheetInfo).SetWorksheetPermission(EWorksheetPermissionPoint.SelectProtectedCells, allowedElements.HasFlag(XLSheetProtectionElements.SelectLockedCells));
+        await agent.Accessibility.OnSheet(worksheet.SheetInfo).SetWorksheetPermission(EWorksheetPermissionPoint.SelectUnProtectedCells, allowedElements.HasFlag(XLSheetProtectionElements.SelectUnlockedCells));
     }
 
     /// <inheritdoc/>
