@@ -40,6 +40,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\UniverBlazored\UniverBlazored.csproj" />
+    <ProjectReference Include="..\UniverBlazored\UniverBlazored.csproj" />
   </ItemGroup>
 </Project>

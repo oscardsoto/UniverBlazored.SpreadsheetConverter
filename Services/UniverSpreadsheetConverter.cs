@@ -154,16 +154,15 @@ public class UniverSpreadsheetConverter : IUniverSpreadsheetConverter<XLWorkbook
             sheetTasks.Add(agent.AddNewSheet(sheetName, lastRow, lastColumn, colorHex.Equals(Toolbox.ColorToHexString(Color.FromArgb(0, 0, 0, 0))) ? null : colorHex));
         }
 
-        foreach (var t in sheetTasks)
-        {
-            USheetInfo sheetInfo = await t;
-            var closedSheet = workbook.Worksheets.First(w => w.Name == sheetInfo.name);
+        var sheetInfos = await Task.WhenAll(sheetTasks);
 
-            // Wait for it to charge
+        // Get all data in Univer for ALL sheets asynchronously (ʘ‿ʘ)╯❤️
+        await Task.WhenAll(sheetInfos.Select(async sheetInfo =>
+        {
+            var closedSheet = workbook.Worksheets.First(w => w.Name == sheetInfo.name);
             var univerSheet = new UWorksheetInfo(closedSheet, _config.MaxCellsReaded, sheetInfo);
             var tasks = new List<Task>();
 
-            // Get all data in Univer (Asynchronously (｡˃ ᵕ ˂ )👌 ❤️)
             if (options.RecData)
                 tasks.Add(_reader.GetDataAsync(univerSheet, agent));
             if (options.RecStyles)
@@ -191,21 +190,21 @@ public class UniverSpreadsheetConverter : IUniverSpreadsheetConverter<XLWorkbook
                 if (col.IsHidden)
                 {
                     int colNumber = col.ColumnNumber();
-                    tasks.Add(agent.RowColumns.OnSheet(univerSheet.SheetInfo).HideColumns(colNumber - 1, 1));
+                    tasks.Add(agent.RowColumns().OnSheet(univerSheet.SheetInfo).HideColumns(colNumber - 1, 1));
                 }
 
             foreach (var row in closedSheet.RowsUsed())
                 if (row.IsHidden)
                 {
                     int rowNumber = row.RowNumber();
-                    tasks.Add(agent.RowColumns.OnSheet(univerSheet.SheetInfo).HideRows(rowNumber - 1, 1));
+                    tasks.Add(agent.RowColumns().OnSheet(univerSheet.SheetInfo).HideRows(rowNumber - 1, 1));
                 }
 
             if (closedSheet.Visibility is XLWorksheetVisibility.Hidden)
                 tasks.Add(agent.HideSheet(univerSheet.SheetInfo.id));
 
             await Task.WhenAll(tasks);
-        }
+        }));
     }
 
     /// <inheritdoc/>
@@ -256,14 +255,14 @@ public class UniverSpreadsheetConverter : IUniverSpreadsheetConverter<XLWorkbook
             if (col.IsHidden)
             {
                 int colNumber = col.ColumnNumber();
-                tasks.Add(agent.RowColumns.OnSheet(univerSheet.SheetInfo).HideColumns(colNumber - 1, 1));
+                tasks.Add(agent.RowColumns().OnSheet(univerSheet.SheetInfo).HideColumns(colNumber - 1, 1));
             }
 
         foreach (var row in worksheet.RowsUsed())
             if (row.IsHidden)
             {
                 int rowNumber = row.RowNumber();
-                tasks.Add(agent.RowColumns.OnSheet(univerSheet.SheetInfo).HideRows(rowNumber - 1, 1));
+                tasks.Add(agent.RowColumns().OnSheet(univerSheet.SheetInfo).HideRows(rowNumber - 1, 1));
             }
 
         if (worksheet.Visibility is XLWorksheetVisibility.Hidden)

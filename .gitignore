@@ -4,3 +4,13 @@ obj
 
 .github
   copilot-instructions.md
+
+# Cache files
+*.lscache
+
+# Added by code-review-graph
+.code-review-graph/
+*.jsonc
+
+# Ignore docs for AIs
+CHANGES_SPREADSHEETCONVERTER.md

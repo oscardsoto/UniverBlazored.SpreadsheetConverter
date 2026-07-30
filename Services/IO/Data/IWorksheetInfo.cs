@@ -1,3 +1,4 @@
+using UniverBlazored.Spreadsheets.Data.Accessibility;
 using UniverBlazored.Spreadsheets.Data.Workbook;
 
 namespace UniverBlazored.SpreadsheetConverter.Services.IO.Data;
@@ -73,6 +74,12 @@ public interface IWorksheetInfo<TWorksheet>
     public List<(int row, double height)> RowHeights { get; set; }
 
     /// <summary>
+    /// Permission configuration for the worksheet, including which actions are allowed or not when the worksheet is protected.
+    /// </summary>
+    /// <returns></returns>
+    public UWorksheetPermissionConfig PermissionConfig { get; set; }
+
+    /// <summary>
     /// 
     /// </summary>
     /// <param name="worksheet"></param>
@@ -143,4 +150,11 @@ public interface IWorksheetInfo<TWorksheet>
     /// </summary>
     /// <returns></returns>
     public List<(int row, double height)> GetRowHeights(TWorksheet worksheet);
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="worksheet"></param>
+    /// <returns></returns>
+    public UWorksheetPermissionConfig GetPermissionConfig(TWorksheet worksheet);
 }

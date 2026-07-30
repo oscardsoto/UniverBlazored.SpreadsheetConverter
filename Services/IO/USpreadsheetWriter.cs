@@ -17,7 +17,7 @@ public class USpreadsheetWriter : ISpreadsheetWriter<IXLWorksheet>
     /// <inheritdoc/>
     public async Task SetAccesibilityAsync(UniverSpreadsheetAgent agent, IXLWorksheet worksheet)
     {
-        var permissions = await agent.Accessibility.OnSheet().GetWorksheetPermissions();
+        var permissions = await agent.Accessibility().OnSheet().GetWorksheetPermissions();
         if (permissions == null || permissions.Count == 0)
             return;
 
@@ -77,14 +77,14 @@ public class USpreadsheetWriter : ISpreadsheetWriter<IXLWorksheet>
     {
         // Columns
         int[] colPositions  = Toolbox.GetValuesInBetween(maxUsed.startColumn, maxUsed.endColumn);
-        double[] colWidths  = await agent.RowColumns.OnSheet().GetColumnWidth(colPositions);
+        double[] colWidths  = await agent.RowColumns().OnSheet().GetColumnWidth(colPositions);
         colWidths           = Toolbox.ConvertToColumnPoints(colWidths);
         for (int i = 0; i < colPositions.Length; i++)
             worksheet.Column(colPositions[i] + 1).Width = colWidths[i];
 
         // Rows
         int[] rowPositions  = Toolbox.GetValuesInBetween(maxUsed.startRow, maxUsed.endRow);
-        double[] rowHeights = await agent.RowColumns.OnSheet().GetRowsHeights(rowPositions);
+        double[] rowHeights = await agent.RowColumns().OnSheet().GetRowsHeights(rowPositions);
         rowHeights          = Toolbox.ConvertToRowPoints(rowHeights);
         for (int i = 0; i < rowPositions.Length; i++)
             worksheet.Row(rowPositions[i] + 1).Height = rowHeights[i];
@@ -93,7 +93,7 @@ public class USpreadsheetWriter : ISpreadsheetWriter<IXLWorksheet>
     /// <inheritdoc/>
     public async Task SetCommentsAsync(UniverSpreadsheetAgent agent, UniverUserManager userManager, IXLWorksheet worksheet)
     {
-        var comments = await agent.Comments.OnSheet().GetComments();
+        var comments = await agent.Comments().OnSheet().GetComments();
         if (comments == null)
             return;
 
@@ -110,7 +110,7 @@ public class USpreadsheetWriter : ISpreadsheetWriter<IXLWorksheet>
     /// <inheritdoc/>
     public async Task SetConditionalFormatsAsync(UniverSpreadsheetAgent agent, IXLWorksheet worksheet)
     {
-        var conditionals = await agent.ConditionalFormats.OnSheet().GetAllConditionalFormats();
+        var conditionals = await agent.ConditionalFormats().OnSheet().GetAllConditionalFormats();
         if (conditionals == null)
             return;
 
@@ -489,8 +489,8 @@ public class USpreadsheetWriter : ISpreadsheetWriter<IXLWorksheet>
                 chunk.endColumn = maxUsed.endColumn;
             }
 
-            var _getValues = await agent.Data.OnSheet().OnRange(chunk).GetValues();
-            var _getFormulas = await agent.Data.OnSheet().OnRange(chunk).GetFormulas();
+            var _getValues = await agent.Data().OnSheet().OnRange(chunk).GetValues();
+            var _getFormulas = await agent.Data().OnSheet().OnRange(chunk).GetFormulas();
             listResults.Add(new (chunk, _getValues, _getFormulas));
             rowCounter += rowsPerProcess;
         }
@@ -568,17 +568,17 @@ public class USpreadsheetWriter : ISpreadsheetWriter<IXLWorksheet>
     /// <inheritdoc/>
     public async Task SetFiltersAsync(UniverSpreadsheetAgent agent, IXLWorksheet worksheet)
     {
-        if (!await agent.Ranges.OnSheet().HasFilter())
+        if (!await agent.Ranges().OnSheet().HasFilter())
             return;
 
-        var filter = await agent.Ranges.OnSheet().GetFilter();
+        var filter = await agent.Ranges().OnSheet().GetFilter();
         worksheet.Range(filter.Value.ToA1Notation()).SetAutoFilter();
     }
 
     /// <inheritdoc/>
     public async Task SetFreezeAsync(UniverSpreadsheetAgent agent, IXLWorksheet worksheet)
     {
-        var freeze = await agent.RowColumns.OnSheet().GetFreeze();
+        var freeze = await agent.RowColumns().OnSheet().GetFreeze();
         if (freeze.startRow != -1)
             worksheet.SheetView.FreezeRows(freeze.startRow);
 
@@ -589,11 +589,11 @@ public class USpreadsheetWriter : ISpreadsheetWriter<IXLWorksheet>
     /// <inheritdoc/>
     public async Task SetImagesAsync(UniverSpreadsheetAgent agent, IXLWorksheet worksheet)
     {
-        var imagesId = await agent.Images.OnSheet().GetImagesId();
+        var imagesId = await agent.Images().OnSheet().GetImagesId();
         foreach (var imgId in imagesId)
         {
-            var imageInfo = await agent.Images.OnSheet().GetImage(imgId, false);
-            imageInfo.source = await agent.Images.OnSheet().GetImageSource(imgId);
+            var imageInfo = await agent.Images().OnSheet().GetImage(imgId, false);
+            imageInfo.source = await agent.Images().OnSheet().GetImageSource(imgId);
             byte[] imageBytes = Convert.FromBase64String(imageInfo.GetBase64());
             using (MemoryStream stream = new(imageBytes))
             {
@@ -617,7 +617,7 @@ public class USpreadsheetWriter : ISpreadsheetWriter<IXLWorksheet>
     /// <inheritdoc/>
     public async Task SetMergesAsync(UniverSpreadsheetAgent agent, IXLWorksheet worksheet)
     {
-        var merges = await agent.Ranges.OnSheet().GetAllMerges();
+        var merges = await agent.Ranges().OnSheet().GetAllMerges();
         if (merges.Length == 0)
             return;
 
@@ -650,7 +650,7 @@ public class USpreadsheetWriter : ISpreadsheetWriter<IXLWorksheet>
                 chunk.endColumn = maxUsed.endColumn;
             }
             
-            var styles = await agent.Styles.OnSheet().OnRange(chunk).GetStyles();
+            var styles = await agent.Styles().OnSheet().OnRange(chunk).GetStyles();
             listResults.Add(styles);
             rowCounter += rowsPerProcess;
         }

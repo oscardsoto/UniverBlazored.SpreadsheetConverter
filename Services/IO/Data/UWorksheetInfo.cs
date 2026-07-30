@@ -2,6 +2,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using ClosedXML.Excel;
+using UniverBlazored.Spreadsheets.Data.Accessibility;
 using UniverBlazored.Spreadsheets.Data.ConditionFormat;
 using UniverBlazored.Spreadsheets.Data.Workbook;
 
@@ -43,6 +44,9 @@ public class UWorksheetInfo : IWorksheetInfo<IXLWorksheet>
     /// <inheritdoc/>
     public List<UImageInfo> Images { get; set; } = new();
 
+    /// <inheritdoc/>
+    public UWorksheetPermissionConfig PermissionConfig { get; set; } = new();
+
     /// <summary>
     /// All worksheet information to be stored in Univer after reading a spreadsheet
     /// </summary>
@@ -62,6 +66,7 @@ public class UWorksheetInfo : IWorksheetInfo<IXLWorksheet>
         MergedRanges        = GetMergedRanges(worksheet);
         RangesData          = GetRangesData(worksheet, SheetInfo.maxUsed, maxCellsReaded);
         RangeStyles         = GetRangeStyles(worksheet, SheetInfo.maxUsed, maxCellsReaded);
+        PermissionConfig    = GetPermissionConfig(worksheet);
     }
 
     /// <inheritdoc/>
@@ -666,5 +671,40 @@ public class UWorksheetInfo : IWorksheetInfo<IXLWorksheet>
             rowsVal.Add((rowPositions[i] - 1, Toolbox.ConvertToRowPixels(rowHeight)[0]));
         }
         return rowsVal;
+    }
+
+    /// <inheritdoc/>
+    public UWorksheetPermissionConfig GetPermissionConfig(IXLWorksheet worksheet)
+    {
+        var permissions = new UWorksheetPermissionConfig();
+        if (!worksheet.Protection.IsProtected)
+        {
+            permissions.Points?.Add("WorksheetEdit", true);
+            return permissions;
+        }
+        
+        permissions.Points?.Add("WorksheetEdit", false);
+        var allowedElements = worksheet.Protection.AllowedElements;
+        var elements = new XLSheetProtectionElements[]
+        {
+            XLSheetProtectionElements.Sort,
+            XLSheetProtectionElements.AutoFilter,
+            XLSheetProtectionElements.PivotTables,
+            XLSheetProtectionElements.InsertColumns,
+            XLSheetProtectionElements.InsertRows,
+            XLSheetProtectionElements.InsertHyperlinks,
+            XLSheetProtectionElements.DeleteColumns,
+            XLSheetProtectionElements.DeleteRows,
+            XLSheetProtectionElements.FormatCells,
+            XLSheetProtectionElements.FormatColumns,
+            XLSheetProtectionElements.FormatRows,
+            XLSheetProtectionElements.EditObjects,
+            XLSheetProtectionElements.SelectLockedCells,
+            XLSheetProtectionElements.SelectUnlockedCells
+        };
+
+        foreach (var element in elements)
+            permissions.Points?.Add("Worksheet" + element.ToString(), allowedElements.HasFlag(element));
+        return permissions;        
     }
 }
